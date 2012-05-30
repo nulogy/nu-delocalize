@@ -58,7 +58,6 @@ ActiveRecord::Base.class_eval do
   end
 end
 
-=begin
 ActiveRecord::Base.instance_eval do
   def define_method_attribute=(attr_name)
     if create_time_zone_conversion_attribute?(attr_name, columns_hash[attr_name])
@@ -79,4 +78,3 @@ ActiveRecord::Base.instance_eval do
     end
   end
 end
-=end
