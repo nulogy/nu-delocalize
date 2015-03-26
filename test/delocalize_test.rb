@@ -1,10 +1,8 @@
 # encoding: utf-8
 
 require 'test_helper'
-require 'active_record/test_case'
-require 'action_view/test_case'
 
-class DelocalizeActiveRecordTest < ActiveRecord::TestCase
+class DelocalizeActiveRecordTest < ActiveSupport::TestCase
   def setup
     Time.zone = 'Berlin' # make sure everything works as expected with TimeWithZone
     Timecop.freeze(Time.zone.local(2009, 3, 1, 12, 0))
@@ -47,6 +45,7 @@ class DelocalizeActiveRecordTest < ActiveRecord::TestCase
   end
 
   test "delocalizes localized date without year" do
+    Timecop.return
     date = Date.civil(Date.today.year, 10, 19)
 
     @product.released_on = '19. Okt'
@@ -64,7 +63,7 @@ class DelocalizeActiveRecordTest < ActiveRecord::TestCase
   end
 
   test "delocalizes with fallback locale" do
-    I18n::Backend::Simple.include(I18n::Backend::Fallbacks)
+    I18n::Backend::Simple.send(:include, I18n::Backend::Fallbacks)
     I18n.fallbacks[:xx] = [:xx, :tt]
 
     I18n.with_locale :xx do
@@ -81,21 +80,9 @@ class DelocalizeActiveRecordTest < ActiveRecord::TestCase
     assert_equal time, @product.published_at
   end
 
-  # TODO can I somehow do this smarter? or should I use another zone w/o DST?
-  if Time.current.dst?
-    test "delocalizes localized time (DST)" do
-      now = Date.today
-      time = Time.zone.local(now.year, now.month, now.day, 9, 0, 0)
-      @product.cant_think_of_a_sensible_time_field = '09:00 Uhr'
-      assert_equal time, @product.cant_think_of_a_sensible_time_field
-    end
-  else
-    test "delocalizes localized time (non-DST)" do
-      now = Date.today
-      time = Time.zone.local(now.year, now.month, now.day, 8, 0, 0)
-      @product.cant_think_of_a_sensible_time_field = '08:00 Uhr'
-      assert_equal time, @product.cant_think_of_a_sensible_time_field
-    end
+  test "delocalizes localized time (DST)" do
+    @product.cant_think_of_a_sensible_time_field = '09:00 Uhr'
+    assert_equal '09:00', @product.cant_think_of_a_sensible_time_field.strftime('%H:%M')
   end
 
   test "invalid dates should be delocalized to nil" do
@@ -158,6 +145,14 @@ class DelocalizeActiveRecordTest < ActiveRecord::TestCase
     end
   end
 
+  test "properly resets when an error is raised in a with_delocalization_disabled block" do
+    I18n.enable_delocalization = true
+    I18n.with_delocalization_disabled do
+      raise 'error'
+    end rescue nil
+    assert_equal true, I18n.enable_delocalization
+  end
+
   test "uses localized parsing if called with with_delocalization_enabled" do
     I18n.with_delocalization_enabled do
       @product.price = '1.299,99'
@@ -166,6 +161,14 @@ class DelocalizeActiveRecordTest < ActiveRecord::TestCase
       @product.price = '-1.299,99'
       assert_equal -1299.99, @product.price
     end
+  end
+
+  test "properly resets when an error is raised in a with_delocalization_enabled block" do
+    I18n.enable_delocalization = false
+    I18n.with_delocalization_enabled do
+      raise 'error'
+    end rescue nil
+    assert_equal false, I18n.enable_delocalization
   end
 
   test "dirty attributes must detect changes in decimal columns" do
@@ -213,7 +216,7 @@ class DelocalizeActiveRecordTest < ActiveRecord::TestCase
   end
 end
 
-class DelocalizeActionViewTest < ActionView::TestCase
+class DelocalizeActionViewTest < ActiveSupport::TestCase
   include ActionView::Helpers::FormHelper
 
   def setup
@@ -223,62 +226,52 @@ class DelocalizeActionViewTest < ActionView::TestCase
 
   test "shows text field using formatted number" do
     @product.price = 1299.9
-    assert_dom_equal '<input id="product_price" name="product[price]" size="30" type="text" value="1.299,90" />',
-      text_field(:product, :price)
+    assert_match /value="1\.299,90"/, text_field(:product, :price)
   end
 
   test "shows text field using formatted number with options" do
     @product.price = 1299.995
-    assert_dom_equal '<input id="product_price" name="product[price]" size="30" type="text" value="1,299.995" />',
-      text_field(:product, :price, :precision => 3, :delimiter => ',', :separator => '.')
+    assert_match /value="1,299\.995"/, text_field(:product, :price, :precision => 3, :delimiter => ',', :separator => '.')
   end
 
   test "shows text field using formatted number without precision if column is an integer" do
     @product.times_sold = 20
-    assert_dom_equal '<input id="product_times_sold" name="product[times_sold]" size="30" type="text" value="20" />',
-      text_field(:product, :times_sold)
+    assert_match /value="20"/, text_field(:product, :times_sold)
 
     @product.times_sold = 2000
-    assert_dom_equal '<input id="product_times_sold" name="product[times_sold]" size="30" type="text" value="2.000" />',
-      text_field(:product, :times_sold)
+    assert_match /value="2\.000"/, text_field(:product, :times_sold)
   end
 
   test "shows text field using formatted date" do
     @product.released_on = Date.civil(2009, 10, 19)
-    assert_dom_equal '<input id="product_released_on" name="product[released_on]" size="30" type="text" value="19.10.2009" />',
-      text_field(:product, :released_on)
+    assert_match /value="19\.10\.2009"/, text_field(:product, :released_on)
   end
 
   test "shows text field using formatted date and time" do
     @product.published_at = Time.zone.local(2009, 3, 1, 12, 0, 0)
     # careful - leading whitespace with %e
-    assert_dom_equal '<input id="product_published_at" name="product[published_at]" size="30" type="text" value="Sonntag,  1. März 2009, 12:00 Uhr" />',
-      text_field(:product, :published_at)
+    assert_match /value="Sonntag,  1\. März 2009, 12:00 Uhr"/, text_field(:product, :published_at)
   end
 
   test "shows text field using formatted date with format" do
     @product.released_on = Date.civil(2009, 10, 19)
-    assert_dom_equal '<input id="product_released_on" name="product[released_on]" size="30" type="text" value="19. Oktober 2009" />',
-      text_field(:product, :released_on, :format => :long)
+    assert_match /value="19\. Oktober 2009"/, text_field(:product, :released_on, :format => :long)
   end
 
   test "shows text field using formatted date and time with format" do
     @product.published_at = Time.zone.local(2009, 3, 1, 12, 0, 0)
     # careful - leading whitespace with %e
-    assert_dom_equal '<input id="product_published_at" name="product[published_at]" size="30" type="text" value=" 1. März, 12:00 Uhr" />',
-      text_field(:product, :published_at, :format => :short)
+    assert_match /value=" 1\. März, 12:00 Uhr"/, text_field(:product, :published_at, :format => :short)
   end
 
   test "shows text field using formatted time with format" do
     @product.cant_think_of_a_sensible_time_field = Time.zone.local(2009, 3, 1, 9, 0, 0)
-    assert_dom_equal '<input id="product_cant_think_of_a_sensible_time_field" name="product[cant_think_of_a_sensible_time_field]" size="30" type="text" value="09:00 Uhr" />',
-      text_field(:product, :cant_think_of_a_sensible_time_field, :format => :time)
+    assert_match /value="09:00 Uhr"/, text_field(:product, :cant_think_of_a_sensible_time_field, :format => :time)
   end
 
   test "integer hidden fields shouldn't be formatted" do
     @product.times_sold = 1000
-    assert_dom_equal '<input id="product_times_sold" name="product[times_sold]" type="hidden" value="1000" />',
-      hidden_field(:product, :times_sold)
+    assert_match /value="1000"/, hidden_field(:product, :times_sold)
   end
 
   test "doesn't raise an exception when object is nil" do
@@ -296,24 +289,26 @@ class DelocalizeActionViewTest < ActionView::TestCase
     }
   end
 
-  test "doesn't override given :value" do
+  test "delocalizes a given non-string :value" do
     @product.price = 1299.9
-    assert_dom_equal '<input id="product_price" name="product[price]" size="30" type="text" value="1.499,90" />',
-      text_field(:product, :price, :value => "1.499,90")
+    assert_match /value="1\.499,90"/, text_field(:product, :price, :value => 1499.90)
+  end
+
+  test "doesn't override given string :value" do
+    @product.price = 1299.9
+    assert_match /value="1\.499,90"/, text_field(:product, :price, :value => "1.499,90")
   end
 
   test "doesn't convert the value if field has numericality errors" do
     @product = ProductWithValidation.new(:price => 'this is not a number')
     @product.valid?
-    assert_dom_equal %(<div class="field_with_errors"><input id="product_price" name="product[price]" size="30" type="text" value="this is not a number" /></div>),
-      text_field(:product, :price)
+    assert_match /value="this is not a number"/, text_field(:product, :price)
   end
 
   test "should convert the value if field have non-numericality errors, but have other errors, e.g. business rules" do
     @product = ProductWithBusinessValidation.new(:price => '1.337,66')
     @product.valid?
-    assert_dom_equal %(<div class="field_with_errors"><input id="product_price" name="product[price]" size="30" type="text" value="1.337,66" /></div>),
-      text_field(:product, :price)
+    assert_match /value="1\.337,66"/, text_field(:product, :price)
   end
 
   test "doesn't raise an exception when object isn't an ActiveReccord" do
@@ -329,8 +324,7 @@ class DelocalizeActionViewTest < ActionView::TestCase
   end
 
   test "formats field with default value correctly" do
-    assert_dom_equal '<input id="product_some_value_with_default" name="product[some_value_with_default]" size="30" type="text" value="0,00" />',
-      text_field(:product, :some_value_with_default)
+    assert_match /value="0,00"/, text_field(:product, :some_value_with_default)
   end
 end
 

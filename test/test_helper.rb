@@ -5,7 +5,8 @@ require 'bundler'
 
 Bundler.require(:default, :development)
 
-require 'test/unit'
+require 'rails/all'
+require 'rails/test_help'
 
 require 'delocalize/rails_ext/action_view'
 require 'delocalize/rails_ext/active_record'
@@ -64,6 +65,7 @@ tt[:date][:formats][:default] = '%d|%m|%Y'
 I18n.backend.store_translations :de, de
 I18n.backend.store_translations :tt, tt
 
+I18n.enforce_available_locales = false
 I18n.locale = :de
 
 class NonArProduct
@@ -81,11 +83,7 @@ class ProductWithValidation < Product
 end
 
 class ProductWithBusinessValidation < Product
-  validate do |record|
-    if record.price > 10
-      record.errors.add(:price, :invalid)
-    end
-  end
+  validates_numericality_of :price, :less_than => 10
 end
 
 config = YAML.load_file(File.dirname(__FILE__) + '/database.yml')
