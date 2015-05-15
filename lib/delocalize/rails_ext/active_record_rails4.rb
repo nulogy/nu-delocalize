@@ -51,6 +51,10 @@ ActiveRecord::Base.class_eval do
     old != value
   end
 
+# The code below sets the datetime value to nil when the value passed in is not valid. As a result, invalid
+# values simply clobber the value in the database without a validation failure.
+
+=begin
   def define_method_attribute=(attr_name)
     if create_time_zone_conversion_attribute?(attr_name, columns_hash[attr_name])
       method_body, line = <<-EOV, __LINE__ + 1
@@ -69,4 +73,5 @@ ActiveRecord::Base.class_eval do
       super
     end
   end
+=end
 end

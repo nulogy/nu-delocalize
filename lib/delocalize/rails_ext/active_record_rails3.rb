@@ -58,6 +58,9 @@ ActiveRecord::Base.class_eval do
   end
 end
 
+# The code below sets the datetime value to nil when the value passed in is not valid. As a result, invalid
+# values simply clobber the value in the database without a validation failure.
+
 =begin
 ActiveRecord::Base.instance_eval do
   def define_method_attribute=(attr_name)
