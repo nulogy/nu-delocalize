@@ -16,8 +16,6 @@ module Delocalize
           require 'delocalize/rails_ext/action_view_rails3'
         end
       end
-
-      require 'delocalize/rails_ext/time_zone'
     end
   end
 end
