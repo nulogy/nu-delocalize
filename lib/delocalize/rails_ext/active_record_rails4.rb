@@ -15,7 +15,7 @@ module ActiveRecord::AttributeMethods::Write
   def type_cast_attribute_for_write(column, value)
     return value unless column
 
-    value = Numeric.parse_localized(value) if column.number? && I18n.delocalization_enabled?
+    value = Delocalize::Parsers::Number.new.parse(value) if column.number?
     column.type_cast_for_write value
   end
 end
@@ -25,9 +25,9 @@ ActiveRecord::Base.class_eval do
     new_value = original_value
     if column = column_for_attribute(attr_name.to_s)
       if column.date?
-        new_value = Date.parse_localized(original_value) rescue original_value
+        new_value = Delocalize::Parsers::Number.new.parse(original_value) rescue original_value
       elsif column.time?
-        new_value = Time.parse_localized(original_value) rescue original_value
+        new_value = Delocalize::Parsers::DateTime.new(original_value.class).parse(original_value) rescue original_value
       end
     end
     write_attribute_without_localization(attr_name, new_value)
@@ -43,7 +43,7 @@ ActiveRecord::Base.class_eval do
         # be typecast back to 0 (''.to_i => 0)
         value = nil
       elsif column.number?
-        value = column.type_cast(Numeric.parse_localized(value))
+        value = column.type_cast(Delocalize::Parsers::Number.new.parse(value))
       else
         value = column.type_cast(value)
       end
@@ -57,7 +57,7 @@ ActiveRecord::Base.class_eval do
         def #{attr_name}=(original_time)
           time = original_time
           unless time.acts_like?(:time)
-            time = time.is_a?(String) ? (I18n.delocalization_enabled? ? Time.zone.parse_localized(time) : Time.zone.parse(time)) : time.to_time rescue time
+            time = time.is_a?(String) ? Delocalize::Parsers::DateTime.new(time.class).parse(time) : time.to_time rescue time
           end
           time = time.in_time_zone rescue nil if time
           write_attribute(:#{attr_name}, original_time)
