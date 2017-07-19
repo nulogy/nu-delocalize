@@ -34,21 +34,39 @@ ActiveRecord::Base.class_eval do
   end
   alias_method_chain :write_attribute, :localization
 
-  define_method :_field_changed? do |attr, old, value|
-    if column = column_for_attribute(attr)
-      if column.number? && column.null && (old.nil? || old == 0) && value.blank?
-        # For nullable numeric columns, NULL gets stored in database for blank (i.e. '') values.
-        # Hence we don't record it as a change if the value changes from nil to ''.
-        # If an old value of 0 is set to '' we want this to get changed to nil as otherwise it'll
-        # be typecast back to 0 (''.to_i => 0)
-        value = nil
-      elsif column.number?
-        value = column.type_cast(Delocalize::Parsers::Number.new.parse(value))
-      else
-        value = column.type_cast(value)
+  # In Rails 4.1.16, _field_changed?(attr, old, value)
+  # In Rails 4.2.8,  _field_changed?(attr, old)
+  if Rails::VERSION::MAJOR == 4 && Rails::VERSION::MINOR < 2
+    define_method :_field_changed? do |attr, old, value|
+      if column = column_for_attribute(attr)
+        if column.number? && column.null && (old.nil? || old == 0) && value.blank?
+          # For nullable numeric columns, NULL gets stored in database for blank (i.e. '') values.
+          # Hence we don't record it as a change if the value changes from nil to ''.
+          # If an old value of 0 is set to '' we want this to get changed to nil as otherwise it'll
+          # be typecast back to 0 (''.to_i => 0)
+          value = nil
+        elsif column.number?
+          value = column.type_cast(Delocalize::Parsers::Number.new.parse(value))
+        else
+          value = column.type_cast(value)
+        end
       end
+
+      old != value
     end
-    old != value
+  else # Rails 4.2+
+    define_method :_field_changed? do |attr, old_value|
+      column = column_for_attribute(attr)
+
+      delocalized_old_value =
+        if column.number?
+          Delocalize::Parsers::Number.new.parse(old_value) rescue old_value
+        else
+          old_value
+        end
+
+      @attributes[attr].changed_from?(delocalized_old_value)
+    end
   end
 
   def define_method_attribute=(attr_name)
