@@ -59,7 +59,7 @@ ActiveRecord::Base.class_eval do
       column = column_for_attribute(attr)
 
       delocalized_old_value =
-        if column.number?
+        if column && column.number?
           Delocalize::Parsers::Number.new.parse(old_value) rescue old_value
         else
           old_value
