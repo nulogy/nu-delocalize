@@ -1,6 +1,8 @@
+require "./lib/delocalize/version"
+
 Gem::Specification.new do |s|
   s.name = 'delocalize'
-  s.version = '1.1.0'
+  s.version = Delocalize::VERSION
 
   s.authors = ['Clemens Kofler']
   s.summary = %q{Localized date/time and number parsing}
