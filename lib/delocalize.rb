@@ -8,8 +8,4 @@ module Delocalize
   class ParserNotFound < ArgumentError; end
 
   autoload :Parsers,                 'delocalize/parsers'
-
-  autoload :Parameters,              'delocalize/parameters'
-  autoload :ParameterDelocalizing,   'delocalize/parameter_delocalizing'
-  autoload :DelocalizableParameters, 'delocalize/delocalizable_parameters'
 end
