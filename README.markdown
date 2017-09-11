@@ -1,4 +1,4 @@
-# delocalize
+# nu-delocalize
 
 [![Build Status](https://travis-ci.org/nulogy/nu-delocalize.svg?branch=master)](https://travis-ci.org/nulogy/nu-delocalize)
 
@@ -9,33 +9,21 @@ delocalize provides localized date/time and number parsing functionality for Rai
 This gem requires the following versions:
 
 * Ruby >= 2.1.10 (Ruby >= 1.9.2 *should* work but isn't officially supported)
-* Rails >= 4.2 (earlier versions including probably even Rails 1 *should* work but aren't officially supported)
+* Rails >= 4.1 (earlier versions including probably even Rails 1 *should* work but aren't officially supported)
 
-Check [the Travis configuration](https://github.com/clemens/delocalize/blob/master/.travis.yml) in order to see which configurations we are testing.
+Check [the Travis configuration](https://github.com/nulogy/nu-delocalize/blob/master/.travis.yml) in order to see which configurations we are testing.
 
 ## Installation
 
-You can use delocalize as a gem. Using delocalize as a Rails plugin has been discontinued and is no supported. If you want/need to use delocalize as a plugin (I really don't see a reason why you'd want to), consider using the `0-2-stable` branch.
+You can use delocalize as a gem from [GitHub](https://github.com/nulogy/nu-delocalize)
 
-### Rails 3 and above
+### Rails 4 and above
 
 To use delocalize, put the following gem requirement in your `Gemfile`:
 
 ```ruby
-gem "delocalize"
+gem "delocalize", git: "https://github.com/nulogy/nu-delocalize.git"
 ```
-
-### Rails 2
-
-Note: Official support for Rails 2 has been discontinued. However, due to the way this gem has been rewritten for its 1.0.0 release, it *should* work with Rails 2 just fine. If you run into any problems, consider filing an issue.
-
-To use delocalize, put the following gem requirement in your `environment.rb`:
-
-```ruby
-config.gem "delocalize", :source => 'http://gemcutter.org'
-```
-
-In Rails 2.3, alternatively, you can use it with Bundler. See http://gembundler.com/rails23.html for instructions.
 
 ## What does it do? And how do I use it?
 
@@ -51,58 +39,15 @@ end
 
 You also had to take care of proper formatting in forms on the frontend so people would see localized values in their forms.
 
-Delocalize does most of this under the covers. All you need is a simple setup in your controllers and your regular translation data (as YAML or Ruby file) where you need Rails' standard translations.
+Delocalize does most of this under the covers.
 
-### Controller setup
+### Models
 
-The approach used in delocalize is based on Rails' own `strong_parameters`. In fact, if you are on Rails 3 with the `strong_parameters` gem installed or Rails 4 (which includes it by default), delocalize is mixed straight into the provided `ActionController::Parameters` class. Otherwise it uses its own similar class (`Delocalize::Parameters`).
-
-You can then use delocalize as you would use strong_parameters:
-
-``` ruby
-class ProductsController < ApplicationController
-  def create
-    Product.create(product_params)
-  end
-
-private
-
-  def product_params
-    delocalize_config = { :released_on => :date, :available_until => :time, :price => :number }
-    # with strong_parameters
-    params.require(:product).permit(*delocalize_config.keys).delocalize(delocalize_config)
-    # without strong_parameters
-    params.delocalize(:product => delocalize_config)[:product]
-    # or
-    params[:product].delocalize(delocalize_config)
-  end
-
-end
-```
-
-If you want to delocalize only certain parameters, configure those parameters and leave the others out – they will be kept as they are.
+TODO
 
 ### Views
 
-Delocalize doesn't automatically localize your data again (yet). There are various reasons for that but the main reasons are:
-
-- It's hard to do this properly with some amount of flexibility for you as the user of the gem without crazy hacks of Rails internals (a problem that delocalize previously suffered from).
-- Personally I feel that presentation logic (including forms) should be split out into separate objects (presenters, decorators, form objects and the like).
-
-I might change my mind but as it stands but for the time being the gist is: Wherever you want to see localized values, you have to localize them yourself.
-
-Examples:
-
-``` ruby
-text_field :product, :released_on, :value => product.released_on ? l(product.released_on) : nil
-text_field_tag 'product[price]', number_with_precision(product.price, :precision => 2)
-```
-
-You can of course use something like the [Draper gem](https://github.com/drapergem/draper) or the great [Reform gem](https://github.com/apotonick/reform) to wrap your actual object and override the relevant accessors.
-
-Check out how this can be done in the [demo app](https://github.com/clemens/delocalize_demo).
-
-There's also a wiki page on [how to write a custom input for SimpleForm](https://github.com/clemens/delocalize/wiki/Using-with-simple-form).
+TODO
 
 ### Locale setup
 
@@ -157,7 +102,7 @@ For dates and times, you have to define input formats which are taken from the a
 
 ### Contributors and Copyright
 
-[Here](https://github.com/clemens/delocalize/graphs/contributors) is a list of all people who ever contributed to delocalize.
+[Here](https://github.com/nulogy/nu-delocalize/graphs/contributors) is a list of all people who ever contributed to delocalize.
 
 Copyright (c) 2009-2015 Clemens Kofler <clemens@railway.at>
 <http://www.railway.at/>
