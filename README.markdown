@@ -45,11 +45,19 @@ Delocalize does most of this under the covers.
 
 ### Models
 
-TODO
+Overwrites `ActiveRecord` writer methods to pass certain column types (dates, times, and numbers) through the delocalization parsers, to convert localized values back into North American number ("1.2" instead of "1,2"), or UTC, formats.
+
+Specifically, it patches the following:
+
+- adds `date?` and `time?` query methods to abstract database column class (`ActiveRecord::ConnectionAdapters::Column`)
+- delocalizes number strings while typecasting (`ActiveRecord::AttributeMethods::Write
+.type_cast_attribute_for_write`)
+- delocalizes when writing attributes of Rails Models (`ActiveRecord::Base#write_attribute_with_localization`)
+- delocalizes when setting time attributes with time zones (`ActiveRecord::Base.define_method_attribute=`)
 
 ### Views
 
-TODO
+Extends text fields (`ActionView::Helpers::Tags::TextField`) to render values in a localized format.
 
 ### Locale setup
 
