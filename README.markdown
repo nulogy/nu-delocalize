@@ -2,14 +2,16 @@
 
 [![Build Status](https://travis-ci.org/nulogy/nu-delocalize.svg?branch=master)](https://travis-ci.org/nulogy/nu-delocalize)
 
-delocalize provides localized date/time and number parsing functionality for Rails.
+`delocalize` provides parsing localized date/time and numbers, back into a standard format (*i.e.* the inverse of localization). This functionality is tightly integrated into Rails.
+
+This fork preserves the pre-1.0 `delocalize` behaviour of Rails model delocalizing logic. It also includes logic to prevent writing `nil`s to your database when failing to delocalize model attributes, raising a validation error instead.
 
 ## Compatibility
 
 This gem requires the following versions:
 
 * Ruby >= 2.1.10 (Ruby >= 1.9.2 *should* work but isn't officially supported)
-* Rails >= 4.1 (earlier versions including probably even Rails 1 *should* work but aren't officially supported)
+* Rails >= 4.1 (earlier versions *should* work but aren't officially supported)
 
 Check [the Travis configuration](https://github.com/nulogy/nu-delocalize/blob/master/.travis.yml) in order to see which configurations we are testing.
 
