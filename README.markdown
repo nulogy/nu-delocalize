@@ -2,14 +2,16 @@
 
 [![Build Status](https://travis-ci.org/nulogy/nu-delocalize.svg?branch=master)](https://travis-ci.org/nulogy/nu-delocalize)
 
-delocalize provides localized date/time and number parsing functionality for Rails.
+`delocalize` provides parsing localized date/time and numbers, back into a standard format (*i.e.* the inverse of localization). This functionality is tightly integrated into Rails.
+
+This fork preserves the pre-1.0 `delocalize` behaviour of Rails model delocalizing logic. It also includes logic to prevent writing `nil`s to your database when failing to delocalize model attributes, raising a validation error instead.
 
 ## Compatibility
 
 This gem requires the following versions:
 
 * Ruby >= 2.1.10 (Ruby >= 1.9.2 *should* work but isn't officially supported)
-* Rails >= 4.1 (earlier versions including probably even Rails 1 *should* work but aren't officially supported)
+* Rails >= 4.1 (earlier versions *should* work but aren't officially supported)
 
 Check [the Travis configuration](https://github.com/nulogy/nu-delocalize/blob/master/.travis.yml) in order to see which configurations we are testing.
 
@@ -43,11 +45,19 @@ Delocalize does most of this under the covers.
 
 ### Models
 
-TODO
+Overwrites `ActiveRecord` writer methods to pass certain column types (dates, times, and numbers) through the delocalization parsers, to convert localized values back into North American number ("1.2" instead of "1,2"), or UTC, formats.
+
+Specifically, it patches the following:
+
+- adds `date?` and `time?` query methods to abstract database column class (`ActiveRecord::ConnectionAdapters::Column`)
+- delocalizes number strings while typecasting (`ActiveRecord::AttributeMethods::Write
+.type_cast_attribute_for_write`)
+- delocalizes when writing attributes of Rails Models (`ActiveRecord::Base#write_attribute_with_localization`)
+- delocalizes when setting time attributes with time zones (`ActiveRecord::Base.define_method_attribute=`)
 
 ### Views
 
-TODO
+Extends text fields (`ActionView::Helpers::Tags::TextField`) to render values in a localized format.
 
 ### Locale setup
 
@@ -104,6 +114,7 @@ For dates and times, you have to define input formats which are taken from the a
 
 [Here](https://github.com/nulogy/nu-delocalize/graphs/contributors) is a list of all people who ever contributed to delocalize.
 
+Copyright (c) 2017 Nulogy Corporation <https://nulogy.com>
 Copyright (c) 2009-2015 Clemens Kofler <clemens@railway.at>
 <http://www.railway.at/>
 Released under the MIT license
