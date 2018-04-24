@@ -112,7 +112,7 @@ For dates and times, you have to define input formats which are taken from the a
 
 ### Contributors and Copyright
 
-[Here](https://github.com/nulogy/nu-delocalize/graphs/contributors) is a list of all people who ever contributed to delocalize.
+[Here](https://github.com/nulogy/nu-delocalize/graphs/contributors) is a list of all people who ever contributed to nu-delocalize.
 
 Copyright (c) 2017 Nulogy Corporation <https://nulogy.com>
 Copyright (c) 2009-2015 Clemens Kofler <clemens@railway.at>
