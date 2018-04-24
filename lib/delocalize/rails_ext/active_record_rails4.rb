@@ -23,7 +23,9 @@ end
 ActiveRecord::Base.class_eval do
   def write_attribute_with_localization(attr_name, original_value)
     new_value = original_value
-    if column = column_for_attribute(attr_name.to_s)
+    if has_attribute?(attr_name.to_s)
+      column = column_for_attribute(attr_name.to_s)
+
       if column.date?
         new_value = Delocalize::Parsers::Number.new.parse(original_value) rescue original_value
       elsif column.time?
@@ -38,7 +40,9 @@ ActiveRecord::Base.class_eval do
   # In Rails 4.2.8,  _field_changed?(attr, old)
   if Rails::VERSION::MAJOR == 4 && Rails::VERSION::MINOR < 2
     define_method :_field_changed? do |attr, old, value|
-      if column = column_for_attribute(attr)
+      if has_attribute?(attr)
+        column = column_for_attribute(attr)
+
         if column.number? && column.null && (old.nil? || old == 0) && value.blank?
           # For nullable numeric columns, NULL gets stored in database for blank (i.e. '') values.
           # Hence we don't record it as a change if the value changes from nil to ''.
@@ -56,14 +60,15 @@ ActiveRecord::Base.class_eval do
     end
   else # Rails 4.2+
     define_method :_field_changed? do |attr, old_value|
-      column = column_for_attribute(attr)
+      delocalized_old_value = old_value
 
-      delocalized_old_value =
-        if column && column.number?
-          Delocalize::Parsers::Number.new.parse(old_value) rescue old_value
-        else
-          old_value
+      if has_attribute?(attr)
+        column = column_for_attribute(attr)
+
+        if column.number?
+          delocalized_old_value = Delocalize::Parsers::Number.new.parse(old_value) rescue old_value
         end
+      end
 
       @attributes[attr].changed_from?(delocalized_old_value)
     end
