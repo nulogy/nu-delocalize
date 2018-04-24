@@ -110,6 +110,21 @@ For dates and times, you have to define input formats which are taken from the a
 
 **Be careful with formats containing only numbers: It's very hard to produce reliable matches if you provide multiple strictly numeric formats!**
 
+### Releases
+
+Updates are provided on GitHub through tags. Here's how to "cut a release":
+
+```
+$ git tag <version>
+$ git push --tags
+```
+
+They can be required in a Gemfile as:
+
+```
+gem "delocalize", git: "https://github.com/nulogy/nu-delocalize.git", tag: "v2.0.1"
+```
+
 ### Contributors and Copyright
 
 [Here](https://github.com/nulogy/nu-delocalize/graphs/contributors) is a list of all people who ever contributed to nu-delocalize.
