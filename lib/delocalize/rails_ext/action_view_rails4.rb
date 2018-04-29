@@ -7,7 +7,7 @@ ActionView::Helpers::Tags::TextField.class_eval do
   include ActionView::Helpers::NumberHelper
 
   def render_with_localization
-    if object && (@options[:value].blank? || !@options[:value].is_a?(String)) && (object.respond_to?(:has_attribute?) && object.has_attribute?(@method_name))
+    if object && (@options[:value].blank? || !@options[:value].is_a?(String)) && safe_has_attribute?(object, @method_name)
       value = @options[:value] || object.send(@method_name)
       column = object.column_for_attribute(@method_name)
 
@@ -36,4 +36,10 @@ ActionView::Helpers::Tags::TextField.class_eval do
   end
 
   alias_method_chain :render, :localization
+
+  private
+
+  def safe_has_attribute?(model, attribute_name)
+    model.respond_to?(:has_attribute?) && model.has_attribute?(attribute_name)
+  end
 end
