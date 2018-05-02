@@ -23,7 +23,7 @@ end
 ActiveRecord::Base.class_eval do
   def write_attribute_with_localization(attr_name, original_value)
     new_value = original_value
-    if model_has_column?(self, attr_name.to_s)
+    if Delocalize.model_has_column?(self, attr_name.to_s)
       column = column_for_attribute(attr_name.to_s)
 
       if column.date?
@@ -40,7 +40,7 @@ ActiveRecord::Base.class_eval do
   # In Rails 4.2.8,  _field_changed?(attr, old)
   if Rails::VERSION::MAJOR == 4 && Rails::VERSION::MINOR < 2
     define_method :_field_changed? do |attr, old, value|
-      if model_has_column?(self, attr)
+      if Delocalize.model_has_column?(self, attr)
         column = column_for_attribute(attr)
 
         if column.number? && column.null && (old.nil? || old == 0) && value.blank?
@@ -62,7 +62,7 @@ ActiveRecord::Base.class_eval do
     define_method :_field_changed? do |attr, old_value|
       delocalized_old_value = old_value
 
-      if model_has_column?(self, attr)
+      if Delocalize.model_has_column?(self, attr)
         column = column_for_attribute(attr)
 
         if column.number?
@@ -91,14 +91,5 @@ ActiveRecord::Base.class_eval do
     else
       super
     end
-  end
-
-  private
-
-  # this ensures that a subsequent call to `column_for_attribute` will return a column and not nil
-  def model_has_column?(model, column_name)
-    return false unless model.respond_to?(:has_attribute?) && model.has_attribute?(column_name)
-
-    model.class.columns.any? { |e| e.name == column_name }
   end
 end
