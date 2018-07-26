@@ -10,12 +10,8 @@ cache: bundler
 rvm:
   - 2.4.1
   - 2.3.4
-  - 2.2.7
-  - 2.1.10
-  - 2.1.6
 
 gemfile:
-  - ci/Gemfile.rails42
   - ci/Gemfile.rails50
 
 matrix:
