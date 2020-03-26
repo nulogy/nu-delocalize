@@ -1,3 +1,7 @@
+# Archived
+
+Use the [original gem](https://github.com/clemens/delocalize)
+
 # nu-delocalize
 
 [![Build Status](https://travis-ci.org/nulogy/nu-delocalize.svg?branch=master)](https://travis-ci.org/nulogy/nu-delocalize)
